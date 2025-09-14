@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Scoreboard{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <!-- Header -->
+    <div class="section-card mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="section-title mb-2">
+                    <i class="fas fa-trophy"></i> Live Scoreboard
+                </h1>
+                <p class="muted mb-0">
+                    Real-time rankings for IEEE OMAN CTF 2025. 
+                    {% if freeze %}
+                        <span class="text-warning">
+                            <i class="fas fa-snowflake"></i> Scoreboard frozen
+                        </span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group">
+                    <a href="{{ url_for('scoreboard.listing') }}" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="section-card">
+        {% if standings|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center" style="width: 80px;">
+                                <i class="fas fa-medal"></i> Rank
+                            </th>
+                            <th scope="col">
+                                <i class="fas fa-{% if user_mode() == 'teams' %}users{% else %}user{% endif %}"></i>
+                                {% if user_mode() == "teams" %}Team{% else %}User{% endif %}
+                            </th>
+                            <th scope="col" class="text-center" style="width: 120px;">
+                                <i class="fas fa-flag"></i> Solves
+                            </th>
+                            <th scope="col" class="text-center" style="width: 120px;">
+                                <i class="fas fa-star"></i> Score
+                            </th>
+                            <th scope="col" class="text-center d-none d-md-table-cell" style="width: 150px;">
+                                <i class="fas fa-clock"></i> Last Submit
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for standing in standings %}
+                        <tr class="{% if session.get('id') == standing.account_id %}table-warning{% endif %}">
+                            <td class="text-center">
+                                {% if standing.pos <= 3 %}
+                                    <i class="fas fa-medal 
+                                        {% if standing.pos == 1 %}text-warning
+                                        {% elif standing.pos == 2 %}text-secondary  
+                                        {% else %}text-dark{% endif %}"></i>
+                                {% endif %}
+                                <strong>{{ standing.pos }}</strong>
+                            </td>
+                            
+                            <td>
+                                <a href="{% if user_mode() == 'teams' %}{{ url_for('teams.public', team_id=standing.account_id) }}{% else %}{{ url_for('users.public', user_id=standing.account_id) }}{% endif %}" 
+                                   class="text-decoration-none">
+                                    <strong>{{ standing.name }}</strong>
+                                </a>
+                                {% if standing.affiliation %}
+                                    <br><small class="muted">{{ standing.affiliation }}</small>
+                                {% endif %}
+                            </td>
+                            
+                            <td class="text-center">
+                                <span class="badge bg-primary">{{ standing.solves }}</span>
+                            </td>
+                            
+                            <td class="text-center">
+                                <strong class="text-success">{{ standing.score }}</strong>
+                            </td>
+                            
+                            <td class="text-center d-none d-md-table-cell">
+                                {% if standing.last_submission %}
+                                    <small class="muted">{{ standing.last_submission | strftime("%m/%d %H:%M") }}</small>
+                                {% else %}
+                                    <small class="muted">—</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if standings|length >= 50 %}
+            <div class="text-center mt-3">
+                <small class="muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Showing top 50 {% if user_mode() == "teams" %}teams{% else %}users{% endif %}
+                </small>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No scores yet</h4>
+                <p class="muted">Be the first to solve a challenge!</p>
+                <a href="{{ url_for('challenges.listing') }}" class="btn btn-solid">
+                    <i class="fas fa-flag"></i> View Challenges
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Additional Stats -->
+    {% if standings|length > 0 %}
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="section-card text-center">
+                <h5 class="text-white mb-2">
+                    <i class="fas fa-users"></i> Total Participants
+                </h5>
+                <h3 class="text-success mb-0">{{ standings|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="section-card text-center">
+                <h5 class="text-white mb-2">
+                    <i class="fas fa-flag"></i> Total Solves
+                </h5>
+                <h3 class="text-success mb-0">{{ standings | sum(attribute='solves') }}</h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="section-card text-center">
+                <h5 class="text-white mb-2">
+                    <i class="fas fa-crown"></i> Leading Score
+                </h5>
+                <h3 class="text-warning mb-0">
+                    {% if standings|length > 0 %}{{ standings[0].score }}{% else %}0{% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script defer src="{{ url_for('views.themes', theme='core', path='js/pages/scoreboard.js') }}"></script>
+<script>
+// Auto-refresh scoreboard every 30 seconds
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

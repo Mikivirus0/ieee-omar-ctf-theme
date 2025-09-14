@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <!-- Header -->
+    <div class="section-card mb-4">
+        <h1 class="section-title mb-2">
+            <i class="fas fa-cog"></i> Account Settings
+        </h1>
+        <p class="muted mb-0">
+            Manage your account preferences and information
+        </p>
+    </div>
+
+    <div class="row">
+        <!-- Settings Form -->
+        <div class="col-lg-8">
+            <div class="section-card">
+                <form method="POST" accept-charset="utf-8" role="form" class="form-settings">
+                    <input type="hidden" name="nonce" value="{{ nonce }}">
+                    
+                    <!-- Basic Information -->
+                    <h4 class="text-white mb-3">
+                        <i class="fas fa-user"></i> Basic Information
+                    </h4>
+                    
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label text-white">
+                            {% if user_mode() == "teams" %}Team Name{% else %}Username{% endif %}
+                        </label>
+                        <input 
+                            class="form-control" 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            value="{{ user.name }}" 
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="email" class="form-label text-white">Email Address</label>
+                        <input 
+                            class="form-control" 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            value="{{ user.email }}" 
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="affiliation" class="form-label text-white">
+                            Affiliation <span class="muted">(Optional)</span>
+                        </label>
+                        <input 
+                            class="form-control" 
+                            type="text" 
+                            id="affiliation" 
+                            name="affiliation" 
+                            value="{{ user.affiliation or '' }}" 
+                            placeholder="University, Company, etc."
+                        >
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="website" class="form-label text-white">
+                            Website <span class="muted">(Optional)</span>
+                        </label>
+                        <input 
+                            class="form-control" 
+                            type="url" 
+                            id="website" 
+                            name="website" 
+                            value="{{ user.website or '' }}" 
+                            placeholder="https://yourwebsite.com"
+                        >
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="country" class="form-label text-white">
+                            Country <span class="muted">(Optional)</span>
+                        </label>
+                        <select class="form-control" id="country" name="country">
+                            <option value="">Select Country</option>
+                            <option value="OM" {% if user.country == 'OM' %}selected{% endif %}>Oman</option>
+                            <option value="AE" {% if user.country == 'AE' %}selected{% endif %}>United Arab Emirates</option>
+                            <option value="SA" {% if user.country == 'SA' %}selected{% endif %}>Saudi Arabia</option>
+                            <option value="US" {% if user.country == 'US' %}selected{% endif %}>United States</option>
+                            <!-- Add more countries as needed -->
+                        </select>
+                    </div>
+
+                    <hr style="border-color: var(--border);">
+
+                    <!-- Password Change -->
+                    <h4 class="text-white mb-3 mt-4">
+                        <i class="fas fa-lock"></i> Change Password
+                    </h4>
+                    
+                    <div class="form-group mb-3">
+                        <label for="current-password" class="form-label text-white">Current Password</label>
+                        <input 
+                            class="form-control" 
+                            type="password" 
+                            id="current-password" 
+                            name="current-password" 
+                            placeholder="Enter current password"
+                        >
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="new-password" class="form-label text-white">New Password</label>
+                                <input 
+                                    class="form-control" 
+                                    type="password" 
+                                    id="new-password" 
+                                    name="new-password" 
+                                    placeholder="Enter new password"
+                                    minlength="8"
+                                >
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="confirm-password" class="form-label text-white">Confirm Password</label>
+                                <input 
+                                    class="form-control" 
+                                    type="password" 
+                                    id="confirm-password" 
+                                    name="confirm-password" 
+                                    placeholder="Confirm new password"
+                                    minlength="8"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-solid">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Info Sidebar -->
+        <div class="col-lg-4">
+            <div class="section-card">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-info-circle"></i> Account Information
+                </h5>
+                
+                <div class="account-info">
+                    <div class="info-item mb-3">
+                        <small class="muted">Account Type:</small>
+                        <div class="text-white">{{ user_mode().title() }}</div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <small class="muted">Registration Date:</small>
+                        <div class="text-white">{{ user.created | strftime('%B %d, %Y') }}</div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <small class="muted">Current Score:</small>
+                        <div class="text-success">{{ user.score or 0 }} points</div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <small class="muted">Solved Challenges:</small>
+                        <div class="text-primary">{{ user.solves or 0 }}</div>
+                    </div>
+
+                    {% if user_mode() == "teams" and user.team %}
+                    <hr style="border-color: var(--border);">
+                    <div class="info-item">
+                        <small class="muted">Team:</small>
+                        <div class="text-white">
+                            <a href="{{ url_for('teams.private') }}" class="text-decoration-none">
+                                {{ user.team.name }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if user_mode() == "teams" and not user.team %}
+            <div class="section-card mt-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-users"></i> Team Actions
+                </h5>
+                <p class="muted mb-3">You're not part of a team yet.</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('teams.new_team') }}" class="btn btn-solid btn-sm">
+                        <i class="fas fa-plus"></i> Create Team
+                    </a>
+                    <a href="{{ url_for('teams.join_team') }}" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-sign-in-alt"></i> Join Team
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script defer src="{{ url_for('views.themes', theme='core', path='js/pages/settings.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password confirmation validation
+    const newPasswordField = document.getElementById('new-password');
+    const confirmPasswordField = document.getElementById('confirm-password');
+    
+    function validatePassword() {
+        if (newPasswordField.value && confirmPasswordField.value) {
+            if (newPasswordField.value !== confirmPasswordField.value) {
+                confirmPasswordField.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPasswordField.setCustomValidity('');
+            }
+        }
+    }
+    
+    newPasswordField.addEventListener('input', validatePassword);
+    confirmPasswordField.addEventListener('input', validatePassword);
+});
+</script>
+
+<style>
+.info-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.account-info .info-item small {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+</style>
+{% endblock %}

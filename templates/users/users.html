@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <!-- Header -->
+    <div class="section-card mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="section-title mb-2">
+                    <i class="fas fa-users"></i> Participants
+                </h1>
+                <p class="muted mb-0">
+                    All registered participants in IEEE OMAN CTF 2025
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group">
+                    <button class="btn btn-ghost btn-sm" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="section-card mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="search-users" class="form-label text-white">Search Users</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="search-users" 
+                        placeholder="Search by username or affiliation..."
+                    >
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="filter-affiliation" class="form-label text-white">Filter by Affiliation</label>
+                    <select class="form-control" id="filter-affiliation">
+                        <option value="">All Affiliations</option>
+                        {% for affiliation in affiliations %}
+                        <option value="{{ affiliation }}">{{ affiliation }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Grid -->
+    <div class="row" id="users-container">
+        {% for user in users %}
+        <div class="col-lg-4 col-md-6 mb-4 user-card" 
+             data-username="{{ user.name | lower }}" 
+             data-affiliation="{{ user.affiliation | lower if user.affiliation else '' }}">
+            <div class="section-card h-100">
+                <div class="text-center mb-3">
+                    <div class="user-avatar mb-2">
+                        <i class="fas fa-user fa-2x"></i>
+                    </div>
+                    <h4 class="text-white mb-1">
+                        <a href="{{ url_for('users.public', user_id=user.id) }}" class="text-decoration-none">
+                            {{ user.name }}
+                        </a>
+                    </h4>
+                    {% if user.affiliation %}
+                        <small class="muted">{{ user.affiliation }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="user-stats mb-3">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="stat-value text-success">{{ user.score }}</div>
+                            <div class="stat-label muted">Score</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-value text-primary">{{ user.solves }}</div>
+                            <div class="stat-label muted">Solves</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="user-rank text-center">
+                    <span class="badge bg-secondary">Rank #{{ user.place }}</span>
+                    {% if user.country %}
+                        <span class="badge bg-outline-light ms-2">{{ user.country }}</span>
+                    {% endif %}
+                </div>
+
+                {% if user.website %}
+                <div class="text-center mt-3">
+                    <a href="{{ user.website }}" target="_blank" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-external-link-alt"></i> Website
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty State -->
+    <div class="section-card text-center py-5" id="no-users" style="display: none;">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No users found</h4>
+        <p class="muted">Try adjusting your search or filters.</p>
+    </div>
+
+    <!-- Empty State - No Users -->
+    {% if users | length == 0 %}
+    <div class="section-card text-center py-5">
+        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No participants yet</h4>
+        <p class="muted">Be the first to register for the CTF!</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-solid">
+            <i class="fas fa-user-plus"></i> Register Now
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Stats Summary -->
+    {% if users | length > 0 %}
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="section-card text-center">
+                <h5 class="text-white mb-2">
+                    <i class="fas fa-users"></i> Total Participants
+                </h5>
+                <h3 class="text-primary mb-0">{{ users | length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="section-card text-center">
+                <h5 class="text-white mb-2">
+                    <i class="fas fa-globe"></i> Countries
+                </h5>
+                <h3 class="text-info mb-0">{{ countries | length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="section-card text-center">
+                <h5 class="text-white mb-2">
+                    <i class="fas fa-university"></i> Affiliations
+                </h5>
+                <h3 class="text-warning mb-0">{{ affiliations | length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="section-card text-center">
+                <h5 class="text-white mb-2">
+                    <i class="fas fa-trophy"></i> Top Score
+                </h5>
+                <h3 class="text-success mb-0">
+                    {% if users | length > 0 %}{{ users[0].score }}{% else %}0{% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(126,14,31,.2);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: #fff;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.user-card {
+    transition: transform 0.2s ease;
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script defer src="{{ url_for('views.themes', theme='core', path='js/pages/users.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-users');
+    const affiliationFilter = document.getElementById('filter-affiliation');
+    const userCards = document.querySelectorAll('.user-card');
+    const noUsersMessage = document.getElementById('no-users');
+
+    function filterUsers() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedAffiliation = affiliationFilter.value.toLowerCase();
+        let visibleCount = 0;
+
+        userCards.forEach(card => {
+            const username = card.getAttribute('data-username');
+            const affiliation = card.getAttribute('data-affiliation');
+
+            const matchesSearch = username.includes(searchTerm) || affiliation.includes(searchTerm);
+            const matchesAffiliation = !selectedAffiliation || affiliation === selectedAffiliation;
+
+            if (matchesSearch && matchesAffiliation) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show/hide no users message
+        if (visibleCount === 0 && userCards.length > 0) {
+            noUsersMessage.style.display = 'block';
+        } else {
+            noUsersMessage.style.display = 'none';
+        }
+    }
+
+    searchInput.addEventListener('input', filterUsers);
+    affiliationFilter.addEventListener('change', filterUsers);
+});
+</script>
+{% endblock %}

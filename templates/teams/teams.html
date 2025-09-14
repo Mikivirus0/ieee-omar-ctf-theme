@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Teams{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <!-- Header -->
+    <div class="section-card mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="section-title mb-2">
+                    <i class="fas fa-users"></i> Teams
+                </h1>
+                <p class="muted mb-0">
+                    Browse all participating teams in IEEE OMAN CTF 2025
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if not session.get('team_id') %}
+                <div class="btn-group">
+                    <a href="{{ url_for('teams.new_team') }}" class="btn btn-solid">
+                        <i class="fas fa-plus"></i> Create Team
+                    </a>
+                    <a href="{{ url_for('teams.join_team') }}" class="btn btn-ghost">
+                        <i class="fas fa-sign-in-alt"></i> Join Team
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Teams Grid -->
+    <div class="row">
+        {% for team in teams %}
+        <div class="col-lg-6 mb-4">
+            <div class="section-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h4 class="text-white mb-1">
+                            <a href="{{ url_for('teams.public', team_id=team.id) }}" class="text-decoration-none">
+                                {{ team.name }}
+                            </a>
+                        </h4>
+                        {% if team.affiliation %}
+                            <small class="muted">{{ team.affiliation }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-end">
+                        <span class="badge bg-primary">Rank #{{ team.place }}</span>
+                    </div>
+                </div>
+
+                <div class="team-stats mb-3">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-value text-success">{{ team.score }}</div>
+                            <div class="stat-label muted">Score</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-value text-primary">{{ team.solves }}</div>
+                            <div class="stat-label muted">Solves</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-value text-white">{{ team.members | length }}</div>
+                            <div class="stat-label muted">Members</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="team-members">
+                    <h6 class="text-white mb-2">
+                        <i class="fas fa-user-friends"></i> Members
+                    </h6>
+                    <div class="members-list">
+                        {% for member in team.members %}
+                        <div class="member-item">
+                            <i class="fas fa-user"></i>
+                            <span class="member-name">{{ member.name }}</span>
+                            {% if member.id == team.captain_id %}
+                                <i class="fas fa-crown text-warning ms-2" title="Team Captain"></i>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty State -->
+    {% if teams | length == 0 %}
+    <div class="section-card text-center py-5">
+        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No teams registered yet</h4>
+        <p class="muted">Be the first to create a team!</p>
+        <a href="{{ url_for('teams.new_team') }}" class="btn btn-solid">
+            <i class="fas fa-plus"></i> Create Team
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if teams | length >= 20 %}
+    <div class="text-center mt-4">
+        <nav>
+            <!-- Pagination controls would go here -->
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(126,14,31,.05);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+}
+
+.member-name {
+    color: var(--ink);
+    flex-grow: 1;
+}
+
+.section-card .h-100 {
+    height: 100% !important;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script defer src="{{ url_for('views.themes', theme='core', path='js/pages/teams.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{
+    "name": "IEEE OMAN CTF 2025",
+    "description": "Professional dark theme for IEEE Oman Section CTF competition with modern design and beautiful maroon/dark color scheme",
+    "author": "IEEE Oman Section",
+    "version": "1.0.0",
+    "license": "MIT",
+    "preview": "assets/img/preview.png",
+    "assets": {
+        "css": [
+            "assets/css/ieee-ctf-theme.css"
+        ],
+        "js": [
+            "assets/js/ieee-ctf-theme.js"
+        ]
+    },
+    "templates": {
+        "base": "templates/base.html",
+        "index": "templates/index.html",
+        "login": "templates/login.html",
+        "register": "templates/register.html",
+        "challenges": "templates/challenges.html",
+        "challenge": "templates/challenge.html",
+        "scoreboard": "templates/scoreboard.html",
+        "teams": "templates/teams/teams.html",
+        "users": "templates/users/users.html",
+        "settings": "templates/settings.html"
+    },
+    "colors": {
+        "primary": "#7e0e1f",
+        "secondary": "#a01628",
+        "background": "#0b0b0d",
+        "surface": "#121216",
+        "text": "#d6d7db",
+        "muted": "#9aa0a6",
+        "border": "#2a2a30",
+        "success": "#10b981",
+        "accent": "#00629B"
+    },
+    "features": [
+        "Dark theme optimized",
+        "IEEE branding integration",
+        "Responsive design",
+        "Professional cybersecurity aesthetic",
+        "Complete template coverage",
+        "Modern UI components",
+        "Accessibility compliant",
+        "Mobile-first approach"
+    ],
+    "compatibility": {
+        "ctfd_version": ">=3.0.0",
+        "browsers": ["Chrome >= 80", "Firefox >= 75", "Safari >= 13", "Edge >= 80"]
+    }
+}

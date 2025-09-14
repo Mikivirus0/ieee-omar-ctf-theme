@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}IEEE OMAN CTF 2025{% endblock %}
+
+{% block content %}
+<div class="container wrap">
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="title">
+        <div class="row" style="align-items:center">
+            <div class="col">
+                <span class="eyebrow">IEEE Student Branch · Oman</span>
+                <h1 id="title" class="title">IEEE OMAN CTF 2025</h1>
+                <p class="lead">Professional jeopardy‑style cybersecurity competition organized by IEEE Oman Student and Young Professionals Congress 2025 with challenges in Web, Pwn, Reverse, Crypto & Forensics. Compete with precision—no gimmicks.</p>
+
+                <div class="btn-group" aria-label="Primary actions">
+                    {% if not session.get('id') %}
+                    <a class="btn btn-solid" href="{{ url_for('auth.register') }}">
+                        <i class="fa-solid fa-user-plus"></i> Register
+                    </a>
+                    <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login
+                    </a>
+                    {% else %}
+                    <a class="btn btn-solid" href="{{ url_for('challenges.listing') }}">
+                        <i class="fa-solid fa-flag"></i> View Challenges
+                    </a>
+                    {% endif %}
+                    <a class="btn btn-ghost" href="{{ url_for('scoreboard.listing') }}">
+                        <i class="fa-solid fa-trophy"></i> Scoreboard
+                    </a>
+                </div>
+
+                <p class="muted" style="margin-top:1rem">
+                    <i class="fa-regular fa-clock" style="margin-right:.5rem" aria-hidden="true"></i>
+                    {% if ctf_started() and not ctf_ended() %}
+                        <span class="text-success">Competition is LIVE!</span>
+                    {% elif not ctf_started() %}
+                        Starts: <span id="countdown" class="countdown">{{ ctf_start_time() | strftime('%B %d, %Y at %H:%M UTC') }}</span>
+                    {% else %}
+                        <span class="text-muted">Competition has ended</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="col">
+                <div class="ieee-logo-wrap">
+                    <img class="ieee-logo" src="{{ url_for('views.themes', theme='ieee-ctf', path='img/ieee-logo.png') }}" alt="IEEE Oman CTF Logo">
+                    <div class="ieee-subtitle">Oman Section</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUICK FACTS -->
+    <section class="wrap" aria-labelledby="facts-title">
+        <h2 id="facts-title" class="sr-only">Quick Facts</h2>
+        <div class="facts">
+            <div class="section-card">
+                <div class="icon"><i class="fa-regular fa-calendar-check"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Schedule</h3>
+                <p class="muted">
+                    {% if ctf_start_time() %}
+                        {{ ctf_start_time() | strftime('%B %d, %Y') }}
+                    {% else %}
+                        To Be Announced
+                    {% endif %}
+                </p>
+            </div>
+            <div class="section-card">
+                <div class="icon"><i class="fa-solid fa-users"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Format</h3>
+                <p class="muted">{% if user_mode() == "teams" %}Team-based (≤ 3 members){% else %}Individual{% endif %}</p>
+            </div>
+            <div class="section-card">
+                <div class="icon"><i class="fa-solid fa-trophy"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Prizes</h3>
+                <p class="muted">To Be Announced</p>
+            </div>
+            <div class="section-card">
+                <div class="icon"><i class="fa-solid fa-globe"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Timezone</h3>
+                <p class="muted">Asia/Muscat (UTC+4)</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="wrap" aria-labelledby="cats-title">
+        <div class="section-card">
+            <h2 class="section-title" id="cats-title">Categories</h2>
+            <div class="categories">
+                <div class="track"><i class="fa-solid fa-code"></i><strong>Web</strong></div>
+                <div class="track"><i class="fa-solid fa-bug"></i><strong>Pwn</strong></div>
+                <div class="track"><i class="fa-solid fa-rotate"></i><strong>Reverse</strong></div>
+                <div class="track"><i class="fa-solid fa-lock"></i><strong>Crypto</strong></div>
+                <div class="track"><i class="fa-solid fa-magnifying-glass"></i><strong>Forensics</strong></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <small>© {{ moment().format('YYYY') }} IEEE OMAN CTF - Built with ❤️ by IEEE Oman Section</small>
+    </footer>
+</div>
+
+<style>
+.facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: .75rem;
+}
+@media (max-width: 900px) { .facts { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 560px) { .facts { grid-template-columns: 1fr; } }
+
+.categories {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: .75rem;
+}
+@media (max-width: 900px) { .categories { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 560px) { .categories { grid-template-columns: 1fr; } }
+.categories .track { justify-content: flex-start; }
+
+.icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .65rem;
+    background: rgba(126,14,31,.2);
+    border: 1px solid var(--border);
+    color: #fff;
+    margin-bottom: .75rem;
+}
+
+.track {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    border: 1.5px dashed var(--border);
+    border-radius: .75rem;
+    padding: 1rem;
+    background: var(--panel);
+    transition: all .2s;
+}
+.track i { width: 22px; text-align: center; }
+.track:hover {
+    border-color: var(--maroon-2);
+    background: rgba(126,14,31,.05);
+    transform: translateX(4px);
+}
+
+.ieee-logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.ieee-logo {
+    max-width: 420px;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,.45));
+}
+.ieee-subtitle {
+    margin-top: .5rem;
+    color: var(--ieee-blue);
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-size: clamp(1rem,1.4vw,1.15rem);
+    padding: .2rem .5rem;
+    border-radius: .35rem;
+    background: linear-gradient(180deg, rgba(0,98,155,.12), rgba(0,98,155,.05));
+    border: 1px solid rgba(0,98,155,.25);
+}
+
+.footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+}
+.footer small { color: var(--muted); }
+</style>
+{% endblock %}
