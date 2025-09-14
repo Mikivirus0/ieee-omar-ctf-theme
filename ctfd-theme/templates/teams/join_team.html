@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}
+Join Team - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="section-card mt-5">
+                <div class="text-center mb-4">
+                    <h2 class="section-title">Join Team</h2>
+                    <p class="muted">Join an existing team</p>
+                </div>
+                
+                {% include "components/errors.html" %}
+                
+                <form method="POST" accept-charset="utf-8" autocomplete="off" role="form">
+                    <div class="mb-3">
+                        <label for="name" class="form-label text-white">Team Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="Enter team name" required>
+                        <small class="muted">Enter the exact team name</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label text-white">Team Password</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Enter team password (if required)">
+                        <small class="muted">Only required if the team has a password</small>
+                    </div>
+                    
+                    {{ nonce }}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-solid">
+                            <i class="fas fa-sign-in-alt"></i> Join Team
+                        </button>
+                        <a href="{{ url_for('teams.listing') }}" class="btn btn-ghost">
+                            <i class="fas fa-arrow-left"></i> Back to Teams
+                        </a>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4 pt-4 border-top border-dark">
+                    <p class="muted">
+                        Want to create your own team? 
+                        <a href="{{ url_for('teams.new') }}" class="text-white">Create a team</a>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Browse Teams -->
+            <div class="section-card mt-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-search"></i> Browse Available Teams
+                </h5>
+                
+                {% if public_teams %}
+                <div class="list-group list-group-flush">
+                    {% for team in public_teams %}
+                    <div class="list-group-item bg-transparent border-dark">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-white mb-1">{{ team.name }}</h6>
+                                <small class="muted">
+                                    <i class="fas fa-users"></i> {{ team.members|length }} members
+                                    {% if team.captain %}
+                                        • Captain: {{ team.captain.name }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <button class="btn btn-ghost btn-sm join-team-btn" 
+                                    data-team-name="{{ team.name }}"
+                                    data-needs-password="{{ team.password is not none }}">
+                                <i class="fas fa-sign-in-alt"></i> Join
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                    <p class="muted">No public teams available</p>
+                    <small class="muted">Teams may require passwords or be full</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle join team buttons
+    const joinButtons = document.querySelectorAll('.join-team-btn');
+    joinButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const teamName = this.dataset.teamName;
+            const needsPassword = this.dataset.needsPassword === 'true';
+            
+            // Fill team name in form
+            document.getElementById('name').value = teamName;
+            
+            // Focus password field if needed
+            if (needsPassword) {
+                document.getElementById('password').focus();
+                IEEECTFTheme.showToast('This team requires a password', 'info');
+            } else {
+                // Auto-submit if no password needed
+                const form = document.querySelector('form');
+                form.submit();
+            }
+        });
+    });
+    
+    // Form submission handler
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Joining...';
+        
+        // Re-enable after 5 seconds as fallback
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Join Team';
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

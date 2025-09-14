@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}
+Register - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="section-card mt-5">
+                <div class="text-center mb-4">
+                    <h2 class="section-title">Register</h2>
+                    <p class="muted">Create your CTF account</p>
+                </div>
+                
+                {% include "components/errors.html" %}
+                
+                <form method="POST" accept-charset="utf-8" autocomplete="off" role="form">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label text-white">Username *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="Choose a username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label text-white">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="Enter your email" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label text-white">Password *</label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Choose a password" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm" class="form-label text-white">Confirm Password *</label>
+                            <input type="password" class="form-control" id="confirm" name="confirm" 
+                                   placeholder="Confirm your password" required>
+                        </div>
+                    </div>
+                    
+                    {% if get_config('team_mode') %}
+                    <div class="section-card" style="background: rgba(126,14,31,.1); margin: 1rem 0;">
+                        <h5 class="text-white mb-3"><i class="fas fa-users"></i> Team Information</h5>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="team_option" id="create_team" value="create" checked>
+                                    <label class="form-check-label text-white" for="create_team">
+                                        Create a new team
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="team_option" id="join_team" value="join">
+                                    <label class="form-check-label text-white" for="join_team">
+                                        Join an existing team
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="team_fields">
+                            <div class="mb-3" id="team_name_field">
+                                <label for="team_name" class="form-label text-white">Team Name</label>
+                                <input type="text" class="form-control" id="team_name" name="team_name" 
+                                       placeholder="Enter team name">
+                            </div>
+                            <div class="mb-3" id="team_password_field" style="display: none;">
+                                <label for="team_password" class="form-label text-white">Team Password</label>
+                                <input type="password" class="form-control" id="team_password" name="team_password" 
+                                       placeholder="Enter team password">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {{ nonce }}
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-solid">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="muted">
+                        Already have an account? 
+                        <a href="{{ url_for('auth.login') }}" class="text-white">Login here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if get_config('team_mode') %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const createTeamRadio = document.getElementById('create_team');
+    const joinTeamRadio = document.getElementById('join_team');
+    const teamNameField = document.getElementById('team_name_field');
+    const teamPasswordField = document.getElementById('team_password_field');
+    
+    function updateTeamFields() {
+        if (createTeamRadio.checked) {
+            teamNameField.style.display = 'block';
+            teamPasswordField.style.display = 'none';
+            document.getElementById('team_name').placeholder = 'Enter team name';
+            document.querySelector('label[for="team_name"]').textContent = 'Team Name';
+        } else {
+            teamNameField.style.display = 'block';
+            teamPasswordField.style.display = 'block';
+            document.getElementById('team_name').placeholder = 'Enter team name to join';
+            document.querySelector('label[for="team_name"]').textContent = 'Team Name to Join';
+        }
+    }
+    
+    createTeamRadio.addEventListener('change', updateTeamFields);
+    joinTeamRadio.addEventListener('change', updateTeamFields);
+    updateTeamFields();
+});
+</script>
+{% endif %}
+{% endblock %}

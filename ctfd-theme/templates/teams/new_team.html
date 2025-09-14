@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}
+Create Team - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="section-card mt-5">
+                <div class="text-center mb-4">
+                    <h2 class="section-title">Create Team</h2>
+                    <p class="muted">Start your own team for the CTF</p>
+                </div>
+                
+                {% include "components/errors.html" %}
+                
+                <form method="POST" accept-charset="utf-8" autocomplete="off" role="form">
+                    <div class="mb-3">
+                        <label for="name" class="form-label text-white">Team Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="Enter team name" required>
+                        <small class="muted">Choose a unique name for your team</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label text-white">Team Password</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Optional team password">
+                        <small class="muted">Set a password if you want to control who can join</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="website" class="form-label text-white">Website</label>
+                            <input type="url" class="form-control" id="website" name="website" 
+                                   placeholder="https://example.com">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="country" class="form-label text-white">Country</label>
+                            <select class="form-control" id="country" name="country">
+                                <option value="">Select Country</option>
+                                <option value="OM">Oman</option>
+                                <option value="US">United States</option>
+                                <option value="GB">United Kingdom</option>
+                                <!-- Add more countries as needed -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="form-label text-white">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Tell others about your team (optional)"></textarea>
+                    </div>
+                    
+                    <!-- Team Size Limit Info -->
+                    {% if get_config('team_size') %}
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Team Size Limit:</strong> 
+                        Teams can have a maximum of {{ get_config('team_size') }} members.
+                    </div>
+                    {% endif %}
+                    
+                    {{ nonce }}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-solid">
+                            <i class="fas fa-plus"></i> Create Team
+                        </button>
+                        <a href="{{ url_for('teams.listing') }}" class="btn btn-ghost">
+                            <i class="fas fa-arrow-left"></i> Back to Teams
+                        </a>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4 pt-4 border-top border-dark">
+                    <p class="muted">
+                        Looking to join an existing team instead? 
+                        <a href="{{ url_for('teams.join') }}" class="text-white">Join a team</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    const teamNameInput = document.getElementById('name');
+    
+    // Real-time team name validation
+    let nameTimeout;
+    teamNameInput.addEventListener('input', function() {
+        clearTimeout(nameTimeout);
+        nameTimeout = setTimeout(() => {
+            const teamName = this.value.trim();
+            if (teamName.length >= 3) {
+                // You could add AJAX validation here to check if name is taken
+                // For now, just basic client-side validation
+                if (teamName.length > 50) {
+                    this.setCustomValidity('Team name must be 50 characters or less');
+                } else {
+                    this.setCustomValidity('');
+                }
+            }
+        }, 500);
+    });
+    
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Team...';
+        
+        // Re-enable after 5 seconds as fallback
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Team';
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

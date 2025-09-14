@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}
+Login - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="section-card mt-5">
+                <div class="text-center mb-4">
+                    <h2 class="section-title">Login</h2>
+                    <p class="muted">Access your CTF account</p>
+                </div>
+                
+                {% include "components/errors.html" %}
+                
+                <form method="POST" accept-charset="utf-8" autocomplete="off" role="form">
+                    <div class="mb-3">
+                        <label for="name" class="form-label text-white">Username or Email</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="Enter your username or email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label text-white">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Enter your password" required>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label text-white" for="remember">
+                            Remember me
+                        </label>
+                    </div>
+                    
+                    {{ nonce }}
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-solid">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="muted">
+                        Don't have an account? 
+                        <a href="{{ url_for('auth.register') }}" class="text-white">Register here</a>
+                    </p>
+                    {% if get_config('mail_server') %}
+                    <p class="muted">
+                        <a href="{{ url_for('auth.reset_password') }}" class="text-white">Forgot your password?</a>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

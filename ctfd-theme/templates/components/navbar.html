@@ -1,0 +1,68 @@
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('views.static_html') }}">
+            <strong>{{ ctf_name() }}</strong>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('challenges.listing') }}">
+                        <i class="fas fa-flag"></i> Challenges
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('scoreboard.listing') }}">
+                        <i class="fas fa-trophy"></i> Scoreboard
+                    </a>
+                </li>
+                {% if get_config('team_mode') %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('teams.listing') }}">
+                        <i class="fas fa-users"></i> Teams
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <ul class="navbar-nav">
+                {% if session.get('id') %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ session.get('name') }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% if get_config('team_mode') and session.get('team_id') %}
+                                <li><a class="dropdown-item" href="{{ url_for('teams.private') }}">
+                                    <i class="fas fa-users"></i> Team
+                                </a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('users.private') }}">
+                                <i class="fas fa-user-cog"></i> Settings
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.register') }}">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ challenge.name }} - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="wrap">
+        <!-- Navigation -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('challenges.listing') }}" class="text-muted">
+                        <i class="fas fa-flag"></i> Challenges
+                    </a>
+                </li>
+                <li class="breadcrumb-item active text-white" aria-current="page">
+                    {{ challenge.name }}
+                </li>
+            </ol>
+        </nav>
+        
+        <div class="row">
+            <!-- Challenge Details -->
+            <div class="col-lg-8">
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="section-title mb-2">{{ challenge.name }}</h2>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-primary fs-6">{{ challenge.value }} points</span>
+                                <span class="muted">
+                                    <i class="fas fa-tag"></i> {{ challenge.category }}
+                                </span>
+                                <span class="muted">
+                                    <i class="fas fa-users"></i> {{ challenge.solves }} solves
+                                </span>
+                            </div>
+                        </div>
+                        {% if solved %}
+                        <div class="text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">Description</h5>
+                        <div class="muted">
+                            {{ challenge.description | safe }}
+                        </div>
+                    </div>
+                    
+                    <!-- Files -->
+                    {% if challenge.files %}
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">Files</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for file in challenge.files %}
+                            <a href="{{ file.location }}" class="btn btn-ghost btn-sm" target="_blank">
+                                <i class="fas fa-download"></i> {{ file.location.split('/')[-1] }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Tags -->
+                    {% if challenge.tags %}
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">Tags</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for tag in challenge.tags %}
+                            <span class="badge bg-secondary">{{ tag.value }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Hints -->
+                    {% if challenge.hints %}
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">Hints</h5>
+                        {% for hint in challenge.hints %}
+                        <div class="section-card mb-2" style="background: rgba(126,14,31,.1);">
+                            {% if hint.cost > 0 and hint.id not in unlocked_hints %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="muted">Hint {{ loop.index }}</span>
+                                    <button class="btn btn-ghost btn-sm unlock-hint" data-hint-id="{{ hint.id }}">
+                                        Unlock for {{ hint.cost }} points
+                                    </button>
+                                </div>
+                            {% else %}
+                                <div class="text-white">
+                                    <strong>Hint {{ loop.index }}:</strong> {{ hint.content }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Submission Panel -->
+            <div class="col-lg-4">
+                <div class="section-card">
+                    {% if solved %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-trophy fa-3x text-success mb-3"></i>
+                            <h4 class="text-success">Challenge Solved!</h4>
+                            <p class="muted">You solved this challenge</p>
+                            {% if solve_time %}
+                                <small class="muted">
+                                    Solved at {{ moment(solve_time).format('MMM Do, h:mm A') }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    {% elif not ctf_started() %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clock fa-2x text-muted mb-3"></i>
+                            <h5 class="text-white">CTF Not Started</h5>
+                            <p class="muted">Wait for the competition to begin</p>
+                        </div>
+                    {% elif ctf_ended() %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-flag fa-2x text-muted mb-3"></i>
+                            <h5 class="text-white">CTF Ended</h5>
+                            <p class="muted">No more submissions allowed</p>
+                        </div>
+                    {% else %}
+                        <h4 class="text-white mb-3">Submit Flag</h4>
+                        
+                        {% include "components/errors.html" %}
+                        
+                        <form id="flag-submit-form" method="POST">
+                            <div class="mb-3">
+                                <label for="submission" class="form-label text-white">Flag</label>
+                                <input type="text" class="form-control" id="submission" name="submission" 
+                                       placeholder="flag{...}" required autofocus>
+                            </div>
+                            
+                            {{ nonce }}
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-solid">
+                                    <i class="fas fa-flag"></i> Submit
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- Submission History -->
+                        {% if submissions %}
+                        <div class="mt-4">
+                            <h6 class="text-white mb-3">Recent Attempts</h6>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                {% for submission in submissions[-5:] %}
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-dark">
+                                    <small class="muted">{{ submission.provided }}</small>
+                                    <small class="text-{{ 'success' if submission.type == 'correct' else 'danger' }}">
+                                        <i class="fas fa-{{ 'check' if submission.type == 'correct' else 'times' }}"></i>
+                                    </small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <!-- Challenge Stats -->
+                <div class="section-card mt-3">
+                    <h5 class="text-white mb-3">Statistics</h5>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="text-white h4 mb-1">{{ challenge.solves }}</div>
+                            <small class="muted">Solves</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-white h4 mb-1">{{ challenge.value }}</div>
+                            <small class="muted">Points</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle hint unlocking
+    const unlockButtons = document.querySelectorAll('.unlock-hint');
+    unlockButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const hintId = this.dataset.hintId;
+            
+            if (confirm('Are you sure you want to unlock this hint?')) {
+                fetch(`/api/v1/hints/${hintId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'CSRF-Token': document.querySelector('input[name="nonce"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        IEEECTFTheme.showToast(data.message || 'Failed to unlock hint', 'error');
+                    }
+                })
+                .catch(error => {
+                    IEEECTFTheme.showToast('An error occurred', 'error');
+                });
+            }
+        });
+    });
+    
+    // Handle flag submission
+    const flagForm = document.getElementById('flag-submit-form');
+    if (flagForm) {
+        flagForm.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            
+            // Re-enable after 3 seconds as fallback
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-flag"></i> Submit';
+            }, 3000);
+        });
+    }
+});
+</script>
+{% endblock %}

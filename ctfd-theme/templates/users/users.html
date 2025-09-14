@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}
+Users - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="wrap">
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">
+                    <i class="fas fa-users"></i> Users
+                </h2>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="muted">
+                        Total: <strong class="text-white">{{ users|length }}</strong> users
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Search and Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <input type="text" id="user-search" class="form-control" 
+                           placeholder="Search users...">
+                </div>
+                <div class="col-md-3">
+                    <select id="user-sort" class="form-control">
+                        <option value="score">Sort by Score</option>
+                        <option value="name">Sort by Name</option>
+                        <option value="solves">Sort by Solves</option>
+                        <option value="created">Sort by Joined</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="user-filter" class="form-control">
+                        <option value="">All Users</option>
+                        <option value="active">Active Users</option>
+                        <option value="top">Top 50</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Users Grid -->
+            <div id="users-container">
+                <div class="row">
+                    {% for user in users %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="user-card section-card" 
+                             data-user-id="{{ user.id }}"
+                             data-user-name="{{ user.name|lower }}"
+                             data-user-score="{{ user.score }}"
+                             data-user-solves="{{ user.solves|length }}"
+                             style="background: rgba(126,14,31,.05);">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="user-rank me-3">
+                                    {% if user.place <= 3 %}
+                                        <i class="fas fa-trophy text-{{ 'warning' if user.place == 1 else 'secondary' if user.place == 2 else 'danger' }}"></i>
+                                    {% else %}
+                                        <span class="text-muted">#{{ user.place or '?' }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="text-white mb-1">{{ user.name }}</h5>
+                                    {% if user.website %}
+                                        <a href="{{ user.website }}" target="_blank" rel="noopener" class="muted small">
+                                            <i class="fas fa-external-link-alt"></i> Website
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <a href="{{ url_for('users.public', user_id=user.id) }}" 
+                                       class="btn btn-ghost btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-white h6 mb-0">{{ user.score }}</div>
+                                    <small class="muted">Score</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-white h6 mb-0">{{ user.solves|length }}</div>
+                                    <small class="muted">Solves</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-white h6 mb-0">
+                                        {% if user.team_id %}
+                                            <i class="fas fa-users"></i>
+                                        {% else %}
+                                            <i class="fas fa-user"></i>
+                                        {% endif %}
+                                    </div>
+                                    <small class="muted">
+                                        {% if user.team_id %}Team{% else %}Solo{% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            {% if user.country %}
+                            <div class="mt-3 pt-3 border-top border-dark">
+                                <small class="muted">
+                                    <i class="flag-icon flag-icon-{{ user.country.lower() }}"></i>
+                                    {{ user.country }}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if not users %}
+            <div class="text-center py-5">
+                <i class="fas fa-user fa-3x text-muted mb-3"></i>
+                <h4 class="text-white">No Users Yet</h4>
+                <p class="muted">No users have registered for this CTF yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('user-search');
+    const sortSelect = document.getElementById('user-sort');
+    const filterSelect = document.getElementById('user-filter');
+    const userCards = document.querySelectorAll('.user-card');
+    
+    function filterAndSortUsers() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const sortBy = sortSelect.value;
+        const filterBy = filterSelect.value;
+        
+        // Filter users
+        let visibleUsers = Array.from(userCards).filter(card => {
+            const userName = card.dataset.userName;
+            const userScore = parseInt(card.dataset.userScore);
+            const userSolves = parseInt(card.dataset.userSolves);
+            
+            // Search filter
+            if (searchTerm && !userName.includes(searchTerm)) {
+                return false;
+            }
+            
+            // Activity filter
+            if (filterBy === 'active' && userScore === 0) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Hide all users first
+        userCards.forEach(card => {
+            card.parentElement.style.display = 'none';
+        });
+        
+        // Sort visible users
+        visibleUsers.sort((a, b) => {
+            switch (sortBy) {
+                case 'name':
+                    return a.dataset.userName.localeCompare(b.dataset.userName);
+                case 'solves':
+                    return parseInt(b.dataset.userSolves) - parseInt(a.dataset.userSolves);
+                case 'created':
+                    return parseInt(b.dataset.userId) - parseInt(a.dataset.userId);
+                case 'score':
+                default:
+                    return parseInt(b.dataset.userScore) - parseInt(a.dataset.userScore);
+            }
+        });
+        
+        // Apply top filter after sorting
+        if (filterBy === 'top') {
+            visibleUsers = visibleUsers.slice(0, 50);
+        }
+        
+        // Show and reorder visible users
+        const container = document.querySelector('#users-container .row');
+        visibleUsers.forEach(card => {
+            card.parentElement.style.display = 'block';
+            container.appendChild(card.parentElement);
+        });
+    }
+    
+    // Debounce search input
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(filterAndSortUsers, 300);
+    });
+    
+    sortSelect.addEventListener('change', filterAndSortUsers);
+    filterSelect.addEventListener('change', filterAndSortUsers);
+});
+</script>
+
+<style>
+.user-card {
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    height: 100%;
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--maroon-2);
+}
+
+.user-rank {
+    min-width: 40px;
+    text-align: center;
+}
+
+.flag-icon {
+    width: 1.33333333em;
+    line-height: 1em;
+}
+</style>
+{% endblock %}

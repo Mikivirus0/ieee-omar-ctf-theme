@@ -1,0 +1,10 @@
+{% if errors %}
+    {% for field, error_messages in errors.items() %}
+        {% for error in error_messages %}
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>{{ field.title() }}:</strong> {{ error }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}

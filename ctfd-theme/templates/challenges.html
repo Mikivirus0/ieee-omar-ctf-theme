@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}
+Challenges - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="wrap">
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">Challenges</h2>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="muted">
+                        <i class="fas fa-trophy"></i> 
+                        Score: <strong class="text-white">{{ score }}</strong>
+                    </span>
+                    {% if get_config('team_mode') and team %}
+                    <span class="muted">
+                        <i class="fas fa-users"></i> 
+                        Team: <strong class="text-white">{{ team.name }}</strong>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if not ctf_started() %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h4 class="text-white">CTF Hasn't Started Yet</h4>
+                    <p class="muted">Challenges will be available when the competition begins.</p>
+                    {% if ctf_start_time() %}
+                        <p class="muted">Start time: {{ moment(ctf_start_time()).format('MMMM Do, YYYY [at] h:mm A') }}</p>
+                    {% endif %}
+                </div>
+            {% elif ctf_ended() %}
+                <div class="text-center py-5">
+                    <i class="fas fa-flag fa-3x text-muted mb-3"></i>
+                    <h4 class="text-white">CTF Has Ended</h4>
+                    <p class="muted">The competition has concluded. Check the scoreboard for final results!</p>
+                    <a href="{{ url_for('scoreboard.listing') }}" class="btn btn-solid mt-3">
+                        <i class="fas fa-trophy"></i> View Scoreboard
+                    </a>
+                </div>
+            {% else %}
+                <!-- Challenge Categories -->
+                <div class="categories mb-4">
+                    <div class="track active" data-category="all">
+                        <i class="fas fa-th"></i><strong>All Categories</strong>
+                    </div>
+                    {% for category in categories %}
+                    <div class="track" data-category="{{ category.name|lower }}">
+                        <i class="fas fa-{{ category_icons.get(category.name, 'puzzle-piece') }}"></i>
+                        <strong>{{ category.name }}</strong>
+                        <span class="badge ms-auto">{{ category.challenges|length }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Challenges Grid -->
+                <div id="challenges-container">
+                    {% for category in categories %}
+                    <div class="challenge-category" data-category="{{ category.name|lower }}">
+                        <h4 class="text-white mb-3">
+                            <i class="fas fa-{{ category_icons.get(category.name, 'puzzle-piece') }} me-2"></i>
+                            {{ category.name }}
+                        </h4>
+                        <div class="row">
+                            {% for challenge in category.challenges %}
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="challenge-button {{ 'challenge-solved' if challenge.id in solved_challenges else '' }}"
+                                     data-challenge-id="{{ challenge.id }}">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="text-white mb-0">{{ challenge.name }}</h5>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-primary">{{ challenge.value }} pts</span>
+                                            {% if challenge.id in solved_challenges %}
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <p class="muted small mb-2">{{ challenge.description|truncate(100) }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="muted">
+                                            <i class="fas fa-users"></i> {{ challenge.solves }} solves
+                                        </small>
+                                        {% if challenge.tags %}
+                                        <div>
+                                            {% for tag in challenge.tags[:2] %}
+                                                <span class="badge bg-secondary small">{{ tag.value }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if not categories %}
+                <div class="text-center py-5">
+                    <i class="fas fa-flag fa-3x text-muted mb-3"></i>
+                    <h4 class="text-white">No Challenges Available</h4>
+                    <p class="muted">Challenges haven't been released yet. Check back later!</p>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Category filtering
+    const categoryTracks = document.querySelectorAll('.track[data-category]');
+    const challengeCategories = document.querySelectorAll('.challenge-category');
+    
+    categoryTracks.forEach(track => {
+        track.addEventListener('click', function() {
+            const selectedCategory = this.dataset.category;
+            
+            // Update active state
+            categoryTracks.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show/hide categories
+            challengeCategories.forEach(category => {
+                if (selectedCategory === 'all' || category.dataset.category === selectedCategory) {
+                    category.style.display = 'block';
+                } else {
+                    category.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Challenge click handler
+    const challengeButtons = document.querySelectorAll('.challenge-button');
+    challengeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const challengeId = this.dataset.challengeId;
+            window.location.href = `/challenges/${challengeId}`;
+        });
+    });
+});
+
+// Category icons mapping
+const categoryIcons = {
+    'Web': 'code',
+    'Pwn': 'bug', 
+    'Reverse': 'rotate',
+    'Crypto': 'lock',
+    'Forensics': 'magnifying-glass',
+    'Misc': 'puzzle-piece'
+};
+</script>
+
+<style>
+.track.active {
+    border-color: var(--maroon-2) !important;
+    background: rgba(126,14,31,.15) !important;
+    color: #fff !important;
+}
+
+.challenge-button {
+    cursor: pointer;
+}
+
+.challenge-category {
+    margin-bottom: 2rem;
+}
+
+.badge {
+    font-size: 0.7rem;
+}
+</style>
+{% endblock %}

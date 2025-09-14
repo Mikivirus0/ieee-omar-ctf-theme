@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}
+Settings - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="wrap">
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-user-cog"></i> Account Settings
+            </h2>
+            
+            {% include "components/errors.html" %}
+            
+            <form method="POST" accept-charset="utf-8" autocomplete="off" role="form">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label text-white">Username</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ user.name }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label text-white">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ user.email }}" required>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="website" class="form-label text-white">Website</label>
+                        <input type="url" class="form-control" id="website" name="website" 
+                               value="{{ user.website or '' }}" placeholder="https://example.com">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="country" class="form-label text-white">Country</label>
+                        <select class="form-control" id="country" name="country">
+                            <option value="">Select Country</option>
+                            <!-- Add country options here -->
+                            <option value="OM" {{ 'selected' if user.country == 'OM' else '' }}>Oman</option>
+                            <option value="US" {{ 'selected' if user.country == 'US' else '' }}>United States</option>
+                            <option value="GB" {{ 'selected' if user.country == 'GB' else '' }}>United Kingdom</option>
+                            <!-- Add more countries as needed -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label text-white">New Password</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Leave blank to keep current password">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="confirm" class="form-label text-white">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm" name="confirm" 
+                               placeholder="Confirm new password">
+                    </div>
+                </div>
+                
+                {{ nonce }}
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-solid">
+                            <i class="fas fa-save"></i> Update Profile
+                        </button>
+                        <a href="{{ url_for('views.static_html') }}" class="btn btn-ghost ms-2">
+                            <i class="fas fa-arrow-left"></i> Back to CTF
+                        </a>
+                    </div>
+                    
+                    {% if get_config('team_mode') %}
+                    <div>
+                        {% if user.team_id %}
+                            <a href="{{ url_for('teams.private') }}" class="btn btn-ghost">
+                                <i class="fas fa-users"></i> Team Settings
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('teams.listing') }}" class="btn btn-ghost">
+                                <i class="fas fa-users"></i> Join/Create Team
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        
+        <!-- Account Statistics -->
+        <div class="section-card mt-4">
+            <h4 class="text-white mb-3">
+                <i class="fas fa-chart-bar"></i> Your Statistics
+            </h4>
+            
+            <div class="row text-center">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="section-card" style="background: rgba(126,14,31,.1);">
+                        <div class="text-white h3 mb-1">{{ user.score }}</div>
+                        <small class="muted">Total Score</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="section-card" style="background: rgba(126,14,31,.1);">
+                        <div class="text-white h3 mb-1">{{ user.solves|length }}</div>
+                        <small class="muted">Challenges Solved</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="section-card" style="background: rgba(126,14,31,.1);">
+                        <div class="text-white h3 mb-1">{{ user.place or 'Unranked' }}</div>
+                        <small class="muted">Current Rank</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="section-card" style="background: rgba(126,14,31,.1);">
+                        <div class="text-white h3 mb-1">{{ moment(user.created).format('MMM YYYY') }}</div>
+                        <small class="muted">Member Since</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Solves -->
+        {% if user.solves %}
+        <div class="section-card mt-4">
+            <h4 class="text-white mb-3">
+                <i class="fas fa-trophy"></i> Recent Solves
+            </h4>
+            
+            <div class="table-responsive">
+                <table class="table table-dark table-sm">
+                    <thead>
+                        <tr>
+                            <th>Challenge</th>
+                            <th>Category</th>
+                            <th>Points</th>
+                            <th>Solved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for solve in user.solves[-10:] %}
+                        <tr>
+                            <td class="text-white">{{ solve.challenge.name }}</td>
+                            <td class="muted">{{ solve.challenge.category }}</td>
+                            <td class="text-success">{{ solve.challenge.value }}</td>
+                            <td class="muted">{{ moment(solve.date).fromNow() }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password confirmation validation
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('confirm');
+    
+    function validatePasswords() {
+        if (passwordInput.value && confirmInput.value && passwordInput.value !== confirmInput.value) {
+            confirmInput.setCustomValidity('Passwords do not match');
+        } else {
+            confirmInput.setCustomValidity('');
+        }
+    }
+    
+    passwordInput.addEventListener('input', validatePasswords);
+    confirmInput.addEventListener('input', validatePasswords);
+    
+    // Form submission handler
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        
+        // Re-enable after 5 seconds as fallback
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Profile';
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

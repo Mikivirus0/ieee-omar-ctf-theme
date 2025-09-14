@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}
+403 - Access Forbidden - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="wrap">
+        <div class="section-card text-center">
+            <div class="py-5">
+                <i class="fas fa-shield-alt fa-5x text-muted mb-4"></i>
+                <h1 class="section-title mb-3">403</h1>
+                <h3 class="text-white mb-3">Access Forbidden</h3>
+                <p class="muted mb-4">
+                    You don't have permission to access this resource.
+                </p>
+                
+                <div class="btn-group" style="justify-content: center;">
+                    <a href="{{ url_for('views.static_html') }}" class="btn btn-solid">
+                        <i class="fas fa-home"></i> Go Home
+                    </a>
+                    {% if not session.get('id') %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}
+Scoreboard - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="wrap">
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">
+                    <i class="fas fa-trophy"></i> Scoreboard
+                </h2>
+                <div class="d-flex align-items-center gap-3">
+                    {% if freeze_time %}
+                    <span class="badge bg-warning">
+                        <i class="fas fa-snowflake"></i> Frozen
+                    </span>
+                    {% endif %}
+                    <button id="refresh-scoreboard" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            
+            {% if not ctf_started() %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h4 class="text-white">Scoreboard Unavailable</h4>
+                    <p class="muted">The scoreboard will be available when the CTF starts.</p>
+                </div>
+            {% else %}
+                <!-- Scoreboard Table -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-center" style="width: 60px;">#</th>
+                                <th scope="col">
+                                    {% if get_config('team_mode') %}Team{% else %}User{% endif %}
+                                </th>
+                                <th scope="col" class="text-center" style="width: 120px;">Score</th>
+                                <th scope="col" class="text-center" style="width: 120px;">Solves</th>
+                                <th scope="col" class="text-center" style="width: 150px;">Last Solve</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in standings %}
+                            <tr class="{{ 'table-warning' if entry.account_id == session.get('id') or (get_config('team_mode') and entry.account_id == session.get('team_id')) else '' }}">
+                                <td class="text-center">
+                                    {% if loop.index <= 3 %}
+                                        <i class="fas fa-trophy text-{{ 'warning' if loop.index == 1 else 'secondary' if loop.index == 2 else 'danger' }}"></i>
+                                    {% else %}
+                                        <strong>{{ loop.index }}</strong>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <strong class="text-white">{{ entry.name }}</strong>
+                                            {% if entry.website %}
+                                                <a href="{{ entry.website }}" target="_blank" rel="noopener" class="ms-2">
+                                                    <i class="fas fa-external-link-alt fa-xs"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if entry.country %}
+                                                <br><small class="muted">
+                                                    <i class="flag-icon flag-icon-{{ entry.country.lower() }}"></i>
+                                                    {{ entry.country }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <strong class="text-white">{{ entry.score }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">{{ entry.solves|length }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if entry.solves %}
+                                        <small class="muted">
+                                            {{ moment(entry.solves[-1].date).fromNow() }}
+                                        </small>
+                                    {% else %}
+                                        <small class="muted">-</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if not standings %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4 class="text-white">No Scores Yet</h4>
+                    <p class="muted">Be the first to solve a challenge and appear on the scoreboard!</p>
+                    <a href="{{ url_for('challenges.listing') }}" class="btn btn-solid mt-3">
+                        <i class="fas fa-flag"></i> View Challenges
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Scoreboard Graph Placeholder -->
+                {% if standings %}
+                <div class="section-card mt-4">
+                    <h4 class="text-white mb-3">Score Progression</h4>
+                    <div id="scoreboard-graph" style="height: 400px;">
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line fa-2x text-muted mb-3"></i>
+                            <p class="muted">Score progression graph will be displayed here</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Freeze Notice -->
+                {% if freeze_time %}
+                <div class="alert alert-warning mt-4" role="alert">
+                    <i class="fas fa-snowflake me-2"></i>
+                    <strong>Scoreboard Frozen:</strong> 
+                    The scoreboard was frozen at {{ moment(freeze_time).format('MMMM Do, h:mm A') }}. 
+                    Final standings will be revealed after the competition ends.
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh scoreboard every 30 seconds (if not frozen)
+    {% if not freeze_time and ctf_started() and not ctf_ended() %}
+    setInterval(function() {
+        const refreshBtn = document.getElementById('refresh-scoreboard');
+        if (refreshBtn) {
+            refreshBtn.click();
+        }
+    }, 30000);
+    {% endif %}
+    
+    // Handle manual refresh
+    const refreshBtn = document.getElementById('refresh-scoreboard');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        });
+    }
+    
+    // Highlight current user/team row
+    const currentRow = document.querySelector('tr.table-warning');
+    if (currentRow) {
+        currentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
+
+<style>
+.table-warning {
+    background-color: rgba(126,14,31,.2) !important;
+    border-color: var(--maroon-2) !important;
+}
+
+.flag-icon {
+    width: 1.33333333em;
+    line-height: 1em;
+}
+
+#scoreboard-graph {
+    background: rgba(126,14,31,.05);
+    border: 1px dashed var(--border);
+    border-radius: .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}

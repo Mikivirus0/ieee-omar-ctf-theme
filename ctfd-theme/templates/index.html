@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container wrap">
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="title">
+        <div class="row" style="align-items:center">
+            <div class="col">
+                <span class="eyebrow">IEEE Student Branch · Oman</span>
+                <h1 id="title" class="title">{{ ctf_name() }}</h1>
+                <p class="lead">
+                    {{ ctf_description() or "Professional jeopardy‑style cybersecurity competition which is organized by IEEE Oman Student and Young Professionals Congress 2025 with challenges of categories: Web, Pwn, Reverse, Crypto & Forensics. Compete with precision—no gimmicks." }}
+                </p>
+
+                <div class="btn-group" aria-label="Primary actions">
+                    {% if not session.get('id') %}
+                        <a class="btn btn-solid" href="{{ url_for('auth.register') }}">
+                            <i class="fa-solid fa-user-plus"></i> Register
+                        </a>
+                        <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login
+                        </a>
+                    {% endif %}
+                    <a class="btn btn-ghost" href="{{ url_for('challenges.listing') }}">
+                        <i class="fa-solid fa-flag"></i> Challenges
+                    </a>
+                    <a class="btn btn-ghost" href="{{ url_for('scoreboard.listing') }}">
+                        <i class="fa-solid fa-trophy"></i> Scoreboard
+                    </a>
+                </div>
+
+                {% if ctf_started() %}
+                    <p class="muted" style="margin-top:1rem">
+                        <i class="fa-solid fa-flag-checkered" style="margin-right:.5rem" aria-hidden="true"></i>
+                        CTF is currently running!
+                    </p>
+                {% elif ctf_ended() %}
+                    <p class="muted" style="margin-top:1rem">
+                        <i class="fa-solid fa-flag" style="margin-right:.5rem" aria-hidden="true"></i>
+                        CTF has ended. Check the scoreboard for final results!
+                    </p>
+                {% else %}
+                    <p class="muted" style="margin-top:1rem">
+                        <i class="fa-regular fa-clock" style="margin-right:.5rem" aria-hidden="true"></i>
+                        Starts in: <span id="countdown" class="countdown" data-start-time="{{ ctf_start_time() }}">TBA</span>
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="col">
+                <div class="ieee-logo-wrap">
+                    <img class="ieee-logo"
+                        src="{{ url_for('views.themes', path='assets/img/logo.png') }}"
+                        alt="IEEE Oman CTF Logo">
+                    <div class="ieee-subtitle">Oman Section</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUICK FACTS -->
+    <section class="wrap" aria-labelledby="facts-title">
+        <h2 id="facts-title" class="sr-only">Quick Facts</h2>
+        <div class="facts">
+            <div class="section-card">
+                <div class="icon"><i class="fa-regular fa-calendar-check"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Schedule</h3>
+                {% if ctf_start_time() %}
+                    <p class="muted">Start: {{ moment(ctf_start_time()).format('MMMM Do, YYYY [at] h:mm A') }}</p>
+                {% else %}
+                    <p class="muted">Schedule: TBA</p>
+                {% endif %}
+            </div>
+            <div class="section-card">
+                <div class="icon"><i class="fa-solid fa-users"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Teams</h3>
+                {% if get_config('team_size') %}
+                    <p class="muted">Teams of {{ get_config('team_size') }} or less</p>
+                {% else %}
+                    <p class="muted">Solo or team play</p>
+                {% endif %}
+            </div>
+            <div class="section-card">
+                <div class="icon"><i class="fa-solid fa-trophy"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Prizes</h3>
+                <p class="muted">{{ get_config('prizes') or "To Be Announced" }}</p>
+            </div>
+            <div class="section-card">
+                <div class="icon"><i class="fa-solid fa-globe"></i></div>
+                <h3 class="section-title" style="font-size:1.125rem">Format</h3>
+                <p class="muted">Jeopardy-style CTF</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="wrap" aria-labelledby="cats-title">
+        <div class="section-card">
+            <h2 class="section-title" id="cats-title">Challenge Categories</h2>
+            <div class="categories">
+                <div class="track"><i class="fa-solid fa-code"></i><strong>Web</strong></div>
+                <div class="track"><i class="fa-solid fa-bug"></i><strong>Pwn</strong></div>
+                <div class="track"><i class="fa-solid fa-rotate"></i><strong>Reverse</strong></div>
+                <div class="track"><i class="fa-solid fa-lock"></i><strong>Crypto</strong></div>
+                <div class="track"><i class="fa-solid fa-magnifying-glass"></i><strong>Forensics</strong></div>
+                <div class="track"><i class="fa-solid fa-puzzle-piece"></i><strong>Misc</strong></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RULES & INFO -->
+    {% if get_config('rules') %}
+    <section class="wrap">
+        <div class="section-card">
+            <h2 class="section-title"><i class="fa-solid fa-gavel"></i> Rules & Guidelines</h2>
+            <div class="muted">
+                {{ get_config('rules') | safe }}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ORGANIZERS -->
+    <section class="wrap" aria-labelledby="orgs-title">
+        <div class="section-card">
+            <h2 class="section-title" id="orgs-title">Organized by</h2>
+            <div class="text-center">
+                <p class="muted">
+                    IEEE Oman Section Student and Young Professionals Congress {{ moment().year }}
+                </p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+(function(){
+    var countdownEl = document.getElementById('countdown');
+    if (!countdownEl) return;
+    
+    var startTime = countdownEl.dataset.startTime;
+    if (!startTime) return;
+
+    var startDate = new Date(startTime);
+    
+    function updateCountdown() {
+        var now = new Date();
+        var diff = startDate - now;
+        
+        if (diff <= 0) {
+            countdownEl.textContent = 'LIVE NOW!';
+            countdownEl.className = 'countdown live';
+            return;
+        }
+        
+        var days = Math.floor(diff / 86400000);
+        var hours = Math.floor((diff % 86400000) / 3600000);
+        var minutes = Math.floor((diff % 3600000) / 60000);
+        var seconds = Math.floor((diff % 60000) / 1000);
+        
+        var timeString = '';
+        if (days > 0) {
+            timeString = days + 'd ' + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+        } else {
+            timeString = pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+        }
+        
+        countdownEl.textContent = timeString;
+    }
+    
+    function pad(n) {
+        return n < 10 ? '0' + n : n;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+})();
+</script>
+{% endblock %}
